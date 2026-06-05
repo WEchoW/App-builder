@@ -1,0 +1,345 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000040000000000000AA01 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA01 /* AppDelegate.swift */; };
+		AA000040000000000000AA02 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA02 /* GameViewController.swift */; };
+		AA000040000000000000AA03 /* Camera3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA03 /* Camera3D.swift */; };
+		AA000040000000000000AA04 /* InputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA04 /* InputManager.swift */; };
+		AA000040000000000000AA05 /* City3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA05 /* City3D.swift */; };
+		AA000040000000000000AA06 /* World3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA06 /* World3D.swift */; };
+		AA000040000000000000AA07 /* Entity3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA07 /* Entity3D.swift */; };
+		AA000040000000000000AA08 /* Player3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA08 /* Player3D.swift */; };
+		AA000040000000000000AA09 /* Vehicle3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA09 /* Vehicle3D.swift */; };
+		AA000040000000000000AA0A /* NPC3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA0A /* NPC3D.swift */; };
+		AA000040000000000000AA0B /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA0B /* HUDView.swift */; };
+		AA000040000000000000AA0C /* VirtualJoystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA0C /* VirtualJoystick.swift */; };
+		AA000040000000000000AA0D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA0D /* Assets.xcassets */; };
+		AA000040000000000000AA0E /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA000020000000000000AA0E /* SceneKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA000020000000000000AA00 /* GTAClone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GTAClone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000020000000000000AA01 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA02 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA03 /* Camera3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA04 /* InputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputManager.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA05 /* City3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = City3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA06 /* World3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = World3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA07 /* Entity3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entity3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA08 /* Player3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA09 /* Vehicle3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vehicle3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA0A /* NPC3D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NPC3D.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA0B /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA0C /* VirtualJoystick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualJoystick.swift; sourceTree = "<group>"; };
+		AA000020000000000000AA0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA000020000000000000AA0E /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
+		AA000020000000000000AA0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000000000000000000C003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000040000000000000AA0E /* SceneKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA000000000000000000D001 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000D002 /* GTAClone */,
+				AA000000000000000000D003 /* Frameworks */,
+				AA000000000000000000D004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D002 /* GTAClone */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA01 /* AppDelegate.swift */,
+				AA000020000000000000AA02 /* GameViewController.swift */,
+				AA000000000000000000D005 /* engine */,
+				AA000000000000000000D006 /* world */,
+				AA000000000000000000D007 /* entities */,
+				AA000000000000000000D008 /* ui */,
+				AA000020000000000000AA0D /* Assets.xcassets */,
+				AA000020000000000000AA0F /* Info.plist */,
+			);
+			path = GTAClone;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D003 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA0E /* SceneKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA00 /* GTAClone.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D005 /* engine */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA03 /* Camera3D.swift */,
+				AA000020000000000000AA04 /* InputManager.swift */,
+			);
+			path = engine;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D006 /* world */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA05 /* City3D.swift */,
+				AA000020000000000000AA06 /* World3D.swift */,
+			);
+			path = world;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D007 /* entities */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA07 /* Entity3D.swift */,
+				AA000020000000000000AA08 /* Player3D.swift */,
+				AA000020000000000000AA09 /* Vehicle3D.swift */,
+				AA000020000000000000AA0A /* NPC3D.swift */,
+			);
+			path = entities;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000D008 /* ui */ = {
+			isa = PBXGroup;
+			children = (
+				AA000020000000000000AA0B /* HUDView.swift */,
+				AA000020000000000000AA0C /* VirtualJoystick.swift */,
+			);
+			path = ui;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000000000000000000B001 /* GTAClone */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000000000000000000B002 /* Build configuration list for PBXNativeTarget "GTAClone" */;
+			buildPhases = (
+				AA000000000000000000C001 /* Sources */,
+				AA000000000000000000C002 /* Resources */,
+				AA000000000000000000C003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GTAClone;
+			productName = GTAClone;
+			productReference = AA000020000000000000AA00 /* GTAClone.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000000000000000A001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = AA000000000000000000A002 /* Build configuration list for PBXProject "GTAClone" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA000000000000000000D001;
+			productRefGroup = AA000000000000000000D004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000000000000000000B001 /* GTAClone */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000000000000000000C002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000040000000000000AA0D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA000000000000000000C001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000040000000000000AA01 /* AppDelegate.swift in Sources */,
+				AA000040000000000000AA02 /* GameViewController.swift in Sources */,
+				AA000040000000000000AA03 /* Camera3D.swift in Sources */,
+				AA000040000000000000AA04 /* InputManager.swift in Sources */,
+				AA000040000000000000AA05 /* City3D.swift in Sources */,
+				AA000040000000000000AA06 /* World3D.swift in Sources */,
+				AA000040000000000000AA07 /* Entity3D.swift in Sources */,
+				AA000040000000000000AA08 /* Player3D.swift in Sources */,
+				AA000040000000000000AA09 /* Vehicle3D.swift in Sources */,
+				AA000040000000000000AA0A /* NPC3D.swift in Sources */,
+				AA000040000000000000AA0B /* HUDView.swift in Sources */,
+				AA000040000000000000AA0C /* VirtualJoystick.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA000000000000000000A003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA000000000000000000A004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA000000000000000000B003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GTAClone/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gtaclone;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA000000000000000000B004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = GTAClone/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gtaclone;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000000000000000000A002 /* Build configuration list for PBXProject "GTAClone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000A003 /* Debug */,
+				AA000000000000000000A004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000000000000000000B002 /* Build configuration list for PBXNativeTarget "GTAClone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000B003 /* Debug */,
+				AA000000000000000000B004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = AA000000000000000000A001 /* Project object */;
+}

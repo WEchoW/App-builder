@@ -421,3 +421,418 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     if (e.target === overlay) overlay.classList.remove('open');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// CHARACTERS — lookup tables
+// ═══════════════════════════════════════════════════════════════
+const CLASS_LABELS = {
+  1: 'Warrior', 2: 'Blader', 4: 'Wizard',
+  8: 'Force Archer', 16: 'Force Shielder', 32: 'Force Blader',
+};
+const CLASS_ICONS = {
+  1: '🗡️', 2: '🔪', 4: '🔮', 8: '🏹', 16: '🛡️', 32: '⚡',
+};
+const MAP_LABELS = {
+  1: 'Green Despair',   2: 'Bloody Ice',         3: 'Swamp of Tranquility',
+  4: 'Fort. Ruina',     5: 'Pontus Ferrum',       6: 'Desert Scream',
+  7: 'Lake in Dusk',    8: 'Tower of Undead',    42: 'Port Lux',
+};
+
+function classLabel(c) { return CLASS_LABELS[c] ?? `Class ${c}`; }
+function classIcon(c)  { return CLASS_ICONS[c]  ?? '⚔️'; }
+function mapLabel(m)   { return MAP_LABELS[m]   ?? `Map ${m}`; }
+function fmtNum(n)     { return n == null ? '—' : Number(n).toLocaleString(); }
+
+// ═══════════════════════════════════════════════════════════════
+// CHARACTERS — SEARCH
+// ═══════════════════════════════════════════════════════════════
+let currentCharacter = null;
+
+async function searchCharacter() {
+  const name = document.getElementById('char-search-input').value.trim();
+  if (!name) { toast('Enter a character name', 'warning'); return; }
+
+  const btn = document.getElementById('char-search-btn');
+  setLoading(btn, true);
+  try {
+    const char = await api('GET', `/characters/search?name=${encodeURIComponent(name)}`);
+    currentCharacter = char;
+    renderCharCard(char);
+  } catch (err) {
+    toast(err.message, 'error');
+    document.getElementById('char-card').classList.remove('visible');
+    currentCharacter = null;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+document.getElementById('char-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchCharacter();
+});
+document.getElementById('char-search-btn').addEventListener('click', searchCharacter);
+
+function renderCharCard(char) {
+  document.getElementById('char-avatar').textContent  = classIcon(char.Class);
+  document.getElementById('char-name').textContent    = char.Name;
+  document.getElementById('char-idx').textContent     = `#${char.CharacterIdx}`;
+  document.getElementById('char-account').textContent = char.AccountID || '—';
+
+  document.getElementById('char-online-badge').innerHTML = char.StillOnline
+    ? '<span class="badge online">● Online</span>'
+    : '<span class="badge offline">○ Offline</span>';
+  document.getElementById('char-class-badge').innerHTML =
+    `<span class="badge gm">${classLabel(char.Class)}</span>`;
+
+  document.getElementById('char-level').textContent      = char.Level ?? '—';
+  document.getElementById('char-exp').textContent        = fmtNum(char.Exp);
+  document.getElementById('char-alz').textContent        = fmtNum(char.Alz);
+  document.getElementById('char-map').textContent        =
+    `${mapLabel(char.MapIndex)} (${char.MapX ?? '?'}, ${char.MapY ?? '?'})`;
+  document.getElementById('char-honor').textContent      = fmtNum(char.HonorPoint);
+  document.getElementById('char-last-login').textContent = fmtDate(char.LastConnectTime);
+
+  document.getElementById('char-level-input').value = char.Level ?? 1;
+  document.getElementById('char-alz-input').value   = char.Alz   ?? 0;
+
+  document.getElementById('char-card').classList.add('visible');
+}
+
+// ── Set Level ──────────────────────────────────────────────────
+document.getElementById('char-set-level-btn').addEventListener('click', () => {
+  if (!currentCharacter) return;
+  const level = parseInt(document.getElementById('char-level-input').value, 10);
+  if (isNaN(level) || level < 1 || level > 200) {
+    toast('Level must be 1–200', 'warning'); return;
+  }
+
+  openConfirmModal(
+    'Set Character Level',
+    `Set "${currentCharacter.Name}" to level ${level}? Experience will be reset to 0.`,
+    async () => {
+      const btn = document.getElementById('char-set-level-btn');
+      setLoading(btn, true);
+      try {
+        await api('PUT', `/characters/${currentCharacter.CharacterIdx}/level`, { level });
+        currentCharacter.Level = level;
+        currentCharacter.Exp   = 0;
+        renderCharCard(currentCharacter);
+        toast(`${currentCharacter.Name} is now level ${level}`);
+      } catch (err) { toast(err.message, 'error'); }
+      finally { setLoading(btn, false); }
+    }
+  );
+});
+
+// ── Set Alz ────────────────────────────────────────────────────
+document.getElementById('char-set-alz-btn').addEventListener('click', async () => {
+  if (!currentCharacter) return;
+  const alz = parseInt(document.getElementById('char-alz-input').value, 10);
+  if (isNaN(alz) || alz < 0 || alz > 2_000_000_000) {
+    toast('Alz must be 0–2,000,000,000', 'warning'); return;
+  }
+  const btn = document.getElementById('char-set-alz-btn');
+  setLoading(btn, true);
+  try {
+    await api('PUT', `/characters/${currentCharacter.CharacterIdx}/alz`, { alz });
+    currentCharacter.Alz = alz;
+    renderCharCard(currentCharacter);
+    toast(`Alz set to ${fmtNum(alz)}`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+// ── Warp modal ─────────────────────────────────────────────────
+document.getElementById('char-warp-btn').addEventListener('click', () => {
+  if (!currentCharacter) return;
+  document.getElementById('warp-preset').value    = '';
+  document.getElementById('warp-map-input').value = currentCharacter.MapIndex ?? '';
+  document.getElementById('warp-x-input').value   = currentCharacter.MapX    ?? '';
+  document.getElementById('warp-y-input').value   = currentCharacter.MapY    ?? '';
+  document.getElementById('warp-modal').classList.add('open');
+});
+
+document.getElementById('warp-preset').addEventListener('change', e => {
+  const val = e.target.value;
+  if (!val) return;
+  const [map, x, y] = val.split(',');
+  document.getElementById('warp-map-input').value = map;
+  document.getElementById('warp-x-input').value   = x;
+  document.getElementById('warp-y-input').value   = y;
+});
+
+document.getElementById('warp-cancel-btn').addEventListener('click', () => {
+  document.getElementById('warp-modal').classList.remove('open');
+});
+
+document.getElementById('warp-confirm-btn').addEventListener('click', async () => {
+  if (!currentCharacter) return;
+  const mapIndex = parseInt(document.getElementById('warp-map-input').value, 10);
+  const x        = parseInt(document.getElementById('warp-x-input').value,   10);
+  const y        = parseInt(document.getElementById('warp-y-input').value,   10);
+
+  if (isNaN(mapIndex) || isNaN(x) || isNaN(y)) {
+    toast('Enter valid map index and coordinates', 'warning'); return;
+  }
+
+  document.getElementById('warp-modal').classList.remove('open');
+  const btn = document.getElementById('char-warp-btn');
+  setLoading(btn, true);
+  try {
+    await api('PUT', `/characters/${currentCharacter.CharacterIdx}/warp`, { mapIndex, x, y });
+    currentCharacter.MapIndex = mapIndex;
+    currentCharacter.MapX     = x;
+    currentCharacter.MapY     = y;
+    renderCharCard(currentCharacter);
+    toast(`${currentCharacter.Name} warped to ${mapLabel(mapIndex)} (${x}, ${y})`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ITEMS — CHARACTER INVENTORY INSPECTOR
+// ═══════════════════════════════════════════════════════════════
+let currentItemChar = null;
+
+async function searchItemChar() {
+  const name = document.getElementById('item-char-search-input').value.trim();
+  if (!name) { toast('Enter a character name', 'warning'); return; }
+
+  const btn = document.getElementById('item-char-search-btn');
+  setLoading(btn, true);
+  try {
+    const char  = await api('GET', `/characters/search?name=${encodeURIComponent(name)}`);
+    const items = await api('GET', `/characters/${char.CharacterIdx}/items`);
+    currentItemChar = { ...char, items };
+    renderItemCard(char, items);
+  } catch (err) {
+    toast(err.message, 'error');
+    document.getElementById('item-card').classList.remove('visible');
+    currentItemChar = null;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+document.getElementById('item-char-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchItemChar();
+});
+document.getElementById('item-char-search-btn').addEventListener('click', searchItemChar);
+
+function renderItemCard(char, items) {
+  document.getElementById('item-char-name').textContent  = char.Name;
+  document.getElementById('item-char-class').textContent = classLabel(char.Class);
+  document.getElementById('item-char-level').textContent = `Lv. ${char.Level ?? '—'}`;
+
+  document.getElementById('item-inventory-count').textContent  = items.inventoryCount  ?? 0;
+  document.getElementById('item-equipped-count').textContent   = items.equippedCount   ?? 0;
+  document.getElementById('item-warehouse-count').textContent  = items.warehouseCount  ?? 0;
+  document.getElementById('item-total-count').textContent      = items.totalCount      ?? 0;
+
+  document.getElementById('item-alz-display').textContent = fmtNum(char.Alz);
+  document.getElementById('item-alz-amount').value        = 0;
+  document.getElementById('item-card').classList.add('visible');
+}
+
+document.getElementById('item-add-alz-btn').addEventListener('click', async () => {
+  if (!currentItemChar) return;
+  const amount = parseInt(document.getElementById('item-alz-amount').value, 10);
+  if (isNaN(amount) || amount <= 0) { toast('Enter a positive amount', 'warning'); return; }
+
+  const newAlz = (Number(currentItemChar.Alz) || 0) + amount;
+  if (newAlz > 2_000_000_000) { toast('Would exceed 2,000,000,000 alz cap', 'warning'); return; }
+
+  const btn = document.getElementById('item-add-alz-btn');
+  setLoading(btn, true);
+  try {
+    await api('PUT', `/characters/${currentItemChar.CharacterIdx}/alz`, { alz: newAlz });
+    currentItemChar.Alz = newAlz;
+    document.getElementById('item-alz-display').textContent = fmtNum(newAlz);
+    toast(`Added ${fmtNum(amount)} alz — new balance: ${fmtNum(newAlz)}`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+document.getElementById('item-set-alz-btn').addEventListener('click', async () => {
+  if (!currentItemChar) return;
+  const alz = parseInt(document.getElementById('item-alz-amount').value, 10);
+  if (isNaN(alz) || alz < 0 || alz > 2_000_000_000) {
+    toast('Alz must be 0–2,000,000,000', 'warning'); return;
+  }
+  const btn = document.getElementById('item-set-alz-btn');
+  setLoading(btn, true);
+  try {
+    await api('PUT', `/characters/${currentItemChar.CharacterIdx}/alz`, { alz });
+    currentItemChar.Alz = alz;
+    document.getElementById('item-alz-display').textContent = fmtNum(alz);
+    toast(`Alz set to ${fmtNum(alz)}`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PREMIUM — SEARCH + MANAGE
+// ═══════════════════════════════════════════════════════════════
+let currentPremAcc = null;
+
+async function searchPremAccount() {
+  const id = document.getElementById('prem-search-input').value.trim();
+  if (!id) { toast('Enter an account ID', 'warning'); return; }
+
+  const btn = document.getElementById('prem-search-btn');
+  setLoading(btn, true);
+  try {
+    const acc  = await api('GET', `/accounts/search?id=${encodeURIComponent(id)}`);
+    const prem = await api('GET', `/accounts/${acc.UserNum}/premium`);
+    currentPremAcc = { ...acc, premium: prem };
+    renderPremCard(acc, prem);
+  } catch (err) {
+    toast(err.message, 'error');
+    document.getElementById('prem-card').classList.remove('visible');
+    currentPremAcc = null;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+document.getElementById('prem-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchPremAccount();
+});
+document.getElementById('prem-search-btn').addEventListener('click', searchPremAccount);
+
+function renderPremCard(acc, prem) {
+  document.getElementById('prem-acc-name').textContent    = acc.ID;
+  document.getElementById('prem-acc-usernum').textContent = `#${acc.UserNum}`;
+
+  const badge = document.getElementById('prem-status-badge');
+  if (prem.hasPremium) {
+    badge.innerHTML = '<span class="badge gm">💎 Premium Active</span>';
+    document.getElementById('prem-status-text').textContent = 'Active';
+  } else {
+    badge.innerHTML = '<span class="badge offline">○ No Premium</span>';
+    document.getElementById('prem-status-text').textContent = 'Inactive';
+  }
+
+  document.getElementById('prem-expiry').textContent   = prem.info?.PeriodDate ? fmtDate(prem.info.PeriodDate) : '—';
+  document.getElementById('prem-type').textContent     = prem.info?.ServiceType != null ? `Type ${prem.info.ServiceType}` : '—';
+  document.getElementById('prem-req-date').textContent = prem.info?.ReqDate ? fmtDate(prem.info.ReqDate) : '—';
+
+  document.getElementById('prem-days-input').value = 30;
+  document.getElementById('prem-card').classList.add('visible');
+}
+
+document.getElementById('prem-add-btn').addEventListener('click', async () => {
+  if (!currentPremAcc) return;
+  const days = parseInt(document.getElementById('prem-days-input').value, 10);
+  if (isNaN(days) || days < 1 || days > 365) {
+    toast('Days must be 1–365', 'warning'); return;
+  }
+  const btn = document.getElementById('prem-add-btn');
+  setLoading(btn, true);
+  try {
+    await api('POST', `/accounts/${currentPremAcc.UserNum}/premium`, { action: 'add', days });
+    const prem = await api('GET', `/accounts/${currentPremAcc.UserNum}/premium`);
+    currentPremAcc.premium = prem;
+    renderPremCard(currentPremAcc, prem);
+    toast(`Added ${days} day(s) of premium to "${currentPremAcc.ID}"`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+document.getElementById('prem-remove-btn').addEventListener('click', () => {
+  if (!currentPremAcc) return;
+  openConfirmModal(
+    'Remove Premium',
+    `Remove all premium from "${currentPremAcc.ID}"? The player will lose premium status immediately.`,
+    async () => {
+      const btn = document.getElementById('prem-remove-btn');
+      setLoading(btn, true);
+      try {
+        await api('POST', `/accounts/${currentPremAcc.UserNum}/premium`, { action: 'remove' });
+        const prem = await api('GET', `/accounts/${currentPremAcc.UserNum}/premium`);
+        currentPremAcc.premium = prem;
+        renderPremCard(currentPremAcc, prem);
+        toast(`Premium removed from "${currentPremAcc.ID}"`);
+      } catch (err) { toast(err.message, 'error'); }
+      finally { setLoading(btn, false); }
+    }
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════
+// CASH SHOP — ECOIN BALANCE
+// ═══════════════════════════════════════════════════════════════
+let currentEcoinAcc = null;
+
+async function searchEcoinAccount() {
+  const id = document.getElementById('ecoin-search-input').value.trim();
+  if (!id) { toast('Enter an account ID', 'warning'); return; }
+
+  const btn = document.getElementById('ecoin-search-btn');
+  setLoading(btn, true);
+  try {
+    const acc   = await api('GET', `/accounts/search?id=${encodeURIComponent(id)}`);
+    const ecoin = await api('GET', `/accounts/${acc.UserNum}/ecoin`);
+    currentEcoinAcc = { ...acc, ecoin };
+    renderEcoinCard(acc, ecoin);
+  } catch (err) {
+    toast(err.message, 'error');
+    document.getElementById('ecoin-card').classList.remove('visible');
+    currentEcoinAcc = null;
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+document.getElementById('ecoin-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchEcoinAccount();
+});
+document.getElementById('ecoin-search-btn').addEventListener('click', searchEcoinAccount);
+
+function renderEcoinCard(acc, ecoin) {
+  document.getElementById('ecoin-acc-name').textContent    = acc.ID;
+  document.getElementById('ecoin-acc-usernum').textContent = `#${acc.UserNum}`;
+  document.getElementById('ecoin-balance').textContent     = (ecoin.points ?? 0).toLocaleString();
+  document.getElementById('ecoin-amount-input').value      = 0;
+  document.getElementById('ecoin-card').classList.add('visible');
+}
+
+document.getElementById('ecoin-add-btn').addEventListener('click', async () => {
+  if (!currentEcoinAcc) return;
+  const amount = parseInt(document.getElementById('ecoin-amount-input').value, 10);
+  if (isNaN(amount) || amount <= 0) { toast('Enter a positive amount', 'warning'); return; }
+
+  const btn = document.getElementById('ecoin-add-btn');
+  setLoading(btn, true);
+  try {
+    await api('PUT', `/accounts/${currentEcoinAcc.UserNum}/ecoin`, { action: 'add', amount });
+    const ecoin = await api('GET', `/accounts/${currentEcoinAcc.UserNum}/ecoin`);
+    currentEcoinAcc.ecoin = ecoin;
+    document.getElementById('ecoin-balance').textContent = (ecoin.points ?? 0).toLocaleString();
+    toast(`Added ${amount.toLocaleString()} eCoin to "${currentEcoinAcc.ID}"`);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { setLoading(btn, false); }
+});
+
+document.getElementById('ecoin-set-btn').addEventListener('click', () => {
+  if (!currentEcoinAcc) return;
+  const amount = parseInt(document.getElementById('ecoin-amount-input').value, 10);
+  if (isNaN(amount) || amount < 0) { toast('Amount must be 0 or more', 'warning'); return; }
+
+  openConfirmModal(
+    'Set eCoin Balance',
+    `Set "${currentEcoinAcc.ID}"'s eCoin balance to ${amount.toLocaleString()}?`,
+    async () => {
+      const btn = document.getElementById('ecoin-set-btn');
+      setLoading(btn, true);
+      try {
+        await api('PUT', `/accounts/${currentEcoinAcc.UserNum}/ecoin`, { action: 'set', amount });
+        const ecoin = await api('GET', `/accounts/${currentEcoinAcc.UserNum}/ecoin`);
+        currentEcoinAcc.ecoin = ecoin;
+        document.getElementById('ecoin-balance').textContent = (ecoin.points ?? 0).toLocaleString();
+        toast(`eCoin balance set to ${(ecoin.points ?? 0).toLocaleString()} for "${currentEcoinAcc.ID}"`);
+      } catch (err) { toast(err.message, 'error'); }
+      finally { setLoading(btn, false); }
+    }
+  );
+});

@@ -622,6 +622,73 @@ button:disabled, .btn:disabled {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
+/* ── Hidden result cards (Characters / Items / Premium / Cash Shop) ── */
+.char-card, .item-card, .prem-card, .ecoin-card { display: none; }
+.char-card.visible, .item-card.visible, .prem-card.visible, .ecoin-card.visible { display: block; }
+
+/* ── Stat grid (Items page inventory counts) ───────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.stat-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-bright);
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-top: 5px;
+}
+
+/* ── Select input (warp preset) ─────────────────────────────── */
+.input-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-bright);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.input-select:focus { border-color: var(--accent); }
+.input-select option { background: var(--surface2); color: var(--text-bright); }
+
+/* ── Warp coordinates 3-column row ─────────────────────────── */
+.warp-coords {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
 /* ── Responsive (compact screens) ─────────────────────────── */
 @media (max-width: 640px) {
   aside { width: 60px; }
@@ -631,4 +698,6 @@ button:disabled, .btn:disabled {
   .account-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .action-row { gap: 8px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .warp-coords { grid-template-columns: 1fr 1fr; }
 }

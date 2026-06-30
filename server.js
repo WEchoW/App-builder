@@ -281,6 +281,292 @@ app.post('/api/accounts/:usernum/ban', wrap(async (req, res) => {
   res.json({ success: true });
 }));
 
+// ── Routes: Characters ────────────────────────────────────────────────────────
+
+/**
+ * GET /api/characters/search?name=xxx
+ * Searches for an active character by name in Server01.cabal_character_table.
+ */
+app.get('/api/characters/search', wrap(async (req, res) => {
+  const name = (req.query.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Missing ?name= parameter' });
+
+  const result = await db().request()
+    .input('name', sql.VarChar(64), name)
+    .query(`
+      SELECT TOP 1
+        CharacterIdx, AccountID, Name, Class, Level, Exp,
+        Alz, MapIndex, MapX, MapY, SlotIndex,
+        StillOnline, CreateTime, LastConnectTime, DeleteState,
+        HonorPoint
+      FROM   [Server01].dbo.cabal_character_table
+      WHERE  Name = @name AND DeleteState = 0
+    `);
+
+  if (!result.recordset.length)
+    return res.status(404).json({ error: `Character "${name}" not found` });
+
+  res.json(result.recordset[0]);
+}));
+
+/**
+ * PUT /api/characters/:charnum/level
+ * Body: { level: number }  — resets Exp to 0.
+ */
+app.put('/api/characters/:charnum/level', wrap(async (req, res) => {
+  const charnum = parseInt(req.params.charnum, 10);
+  const level   = parseInt(req.body.level,    10);
+
+  if (isNaN(charnum) || isNaN(level))
+    return res.status(400).json({ error: 'Invalid charnum or level' });
+  if (level < 1 || level > 200)
+    return res.status(400).json({ error: 'Level must be 1–200' });
+
+  await db().request()
+    .input('charnum', sql.Int, charnum)
+    .input('level',   sql.Int, level)
+    .query(`
+      UPDATE [Server01].dbo.cabal_character_table
+      SET    Level = @level, Exp = 0
+      WHERE  CharacterIdx = @charnum
+    `);
+
+  res.json({ success: true });
+}));
+
+/**
+ * PUT /api/characters/:charnum/alz
+ * Body: { alz: number }
+ */
+app.put('/api/characters/:charnum/alz', wrap(async (req, res) => {
+  const charnum = parseInt(req.params.charnum, 10);
+  const alz     = parseInt(req.body.alz,       10);
+
+  if (isNaN(charnum) || isNaN(alz))
+    return res.status(400).json({ error: 'Invalid charnum or alz' });
+  if (alz < 0 || alz > 2_000_000_000)
+    return res.status(400).json({ error: 'Alz must be 0–2,000,000,000' });
+
+  await db().request()
+    .input('charnum', sql.Int,    charnum)
+    .input('alz',     sql.BigInt, alz)
+    .query(`
+      UPDATE [Server01].dbo.cabal_character_table
+      SET    Alz = @alz
+      WHERE  CharacterIdx = @charnum
+    `);
+
+  res.json({ success: true });
+}));
+
+/**
+ * PUT /api/characters/:charnum/warp
+ * Body: { mapIndex, x, y }
+ */
+app.put('/api/characters/:charnum/warp', wrap(async (req, res) => {
+  const charnum  = parseInt(req.params.charnum, 10);
+  const mapIndex = parseInt(req.body.mapIndex,  10);
+  const x        = parseInt(req.body.x,         10);
+  const y        = parseInt(req.body.y,         10);
+
+  if (isNaN(charnum) || isNaN(mapIndex) || isNaN(x) || isNaN(y))
+    return res.status(400).json({ error: 'Invalid parameters' });
+
+  await db().request()
+    .input('charnum',  sql.Int, charnum)
+    .input('mapIndex', sql.Int, mapIndex)
+    .input('x',        sql.Int, x)
+    .input('y',        sql.Int, y)
+    .query(`
+      UPDATE [Server01].dbo.cabal_character_table
+      SET    MapIndex = @mapIndex, MapX = @x, MapY = @y
+      WHERE  CharacterIdx = @charnum
+    `);
+
+  res.json({ success: true });
+}));
+
+// ── Routes: Items (inventory inspector) ──────────────────────────────────────
+
+/**
+ * GET /api/characters/:charnum/items
+ * Returns item counts per slot category from Server01.cabal_item_table.
+ */
+app.get('/api/characters/:charnum/items', wrap(async (req, res) => {
+  const charnum = parseInt(req.params.charnum, 10);
+  if (isNaN(charnum)) return res.status(400).json({ error: 'Invalid charnum' });
+
+  try {
+    const result = await db().request()
+      .input('charnum', sql.Int, charnum)
+      .query(`
+        SELECT
+          SUM(CASE WHEN SlotIndex BETWEEN 0   AND 71  THEN 1 ELSE 0 END) AS inventoryCount,
+          SUM(CASE WHEN SlotIndex BETWEEN 72  AND 143 THEN 1 ELSE 0 END) AS warehouseCount,
+          SUM(CASE WHEN SlotIndex BETWEEN 144 AND 152 THEN 1 ELSE 0 END) AS equippedCount,
+          COUNT(*) AS totalCount
+        FROM [Server01].dbo.cabal_item_table
+        WHERE CharacterIdx = @charnum
+      `);
+    res.json(result.recordset[0] ?? { inventoryCount: 0, warehouseCount: 0, equippedCount: 0, totalCount: 0 });
+  } catch {
+    res.json({ inventoryCount: 0, warehouseCount: 0, equippedCount: 0, totalCount: 0 });
+  }
+}));
+
+// ── Routes: Premium ───────────────────────────────────────────────────────────
+
+/**
+ * GET /api/accounts/:usernum/premium
+ * Returns premium status and expiry for the given account.
+ */
+app.get('/api/accounts/:usernum/premium', wrap(async (req, res) => {
+  const usernum = parseInt(req.params.usernum, 10);
+  if (isNaN(usernum)) return res.status(400).json({ error: 'Invalid usernum' });
+
+  try {
+    const result = await db().request()
+      .input('usernum', sql.Int, usernum)
+      .query(`
+        SELECT TOP 1 *
+        FROM   [Account].dbo.cabal_premium_table
+        WHERE  UserNum = @usernum
+        ORDER  BY PeriodDate DESC
+      `);
+
+    const row      = result.recordset[0] ?? null;
+    const isActive = row && new Date(row.PeriodDate) > new Date();
+    res.json({ hasPremium: !!isActive, info: row });
+  } catch {
+    res.json({ hasPremium: false, info: null });
+  }
+}));
+
+/**
+ * POST /api/accounts/:usernum/premium
+ * Body: { action: 'add'|'remove', days?: number }
+ * add: extends existing premium (from today if expired) or creates a new row.
+ */
+app.post('/api/accounts/:usernum/premium', wrap(async (req, res) => {
+  const usernum = parseInt(req.params.usernum, 10);
+  const { action, days } = req.body;
+
+  if (isNaN(usernum)) return res.status(400).json({ error: 'Invalid usernum' });
+  if (!['add', 'remove'].includes(action))
+    return res.status(400).json({ error: 'action must be "add" or "remove"' });
+
+  if (action === 'remove') {
+    await db().request()
+      .input('usernum', sql.Int, usernum)
+      .query(`DELETE FROM [Account].dbo.cabal_premium_table WHERE UserNum = @usernum`);
+    return res.json({ success: true });
+  }
+
+  const daysNum = parseInt(days, 10);
+  if (isNaN(daysNum) || daysNum < 1 || daysNum > 365)
+    return res.status(400).json({ error: 'days must be 1–365' });
+
+  await db().request()
+    .input('usernum', sql.Int, usernum)
+    .input('days',    sql.Int, daysNum)
+    .query(`
+      IF EXISTS (SELECT 1 FROM [Account].dbo.cabal_premium_table WHERE UserNum = @usernum)
+        UPDATE [Account].dbo.cabal_premium_table
+        SET    PeriodDate = CASE
+                 WHEN PeriodDate > GETDATE()
+                 THEN DATEADD(day, @days, PeriodDate)
+                 ELSE DATEADD(day, @days, GETDATE())
+               END
+        WHERE  UserNum = @usernum
+      ELSE BEGIN
+        BEGIN TRY
+          INSERT INTO [Account].dbo.cabal_premium_table
+            (UserNum, ServiceType, PeriodDate, ReqDate)
+          VALUES (@usernum, 1, DATEADD(day, @days, GETDATE()), GETDATE())
+        END TRY
+        BEGIN CATCH
+          INSERT INTO [Account].dbo.cabal_premium_table
+            (UserNum, ServiceType, PeriodDate)
+          VALUES (@usernum, 1, DATEADD(day, @days, GETDATE()))
+        END CATCH
+      END
+    `);
+
+  res.json({ success: true });
+}));
+
+// ── Routes: Cash Shop (eCoin) ──────────────────────────────────────────────────
+
+/**
+ * GET /api/accounts/:usernum/ecoin
+ * Returns the Point (eCoin) balance from cabal_pointshop_table.
+ */
+app.get('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
+  const usernum = parseInt(req.params.usernum, 10);
+  if (isNaN(usernum)) return res.status(400).json({ error: 'Invalid usernum' });
+
+  try {
+    const result = await db().request()
+      .input('usernum', sql.Int, usernum)
+      .query(`
+        SELECT TOP 1 Point
+        FROM   [Account].dbo.cabal_pointshop_table
+        WHERE  UserNum = @usernum
+      `);
+    res.json({ points: result.recordset[0]?.Point ?? 0 });
+  } catch {
+    res.json({ points: 0 });
+  }
+}));
+
+/**
+ * PUT /api/accounts/:usernum/ecoin
+ * Body: { action: 'add'|'set', amount: number }
+ * Upserts the Point row — creates it if the account has no existing entry.
+ */
+app.put('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
+  const usernum = parseInt(req.params.usernum, 10);
+  const { action } = req.body;
+  const amount     = parseInt(req.body.amount, 10);
+
+  if (isNaN(usernum))
+    return res.status(400).json({ error: 'Invalid usernum' });
+  if (!['add', 'set'].includes(action))
+    return res.status(400).json({ error: 'action must be "add" or "set"' });
+  if (isNaN(amount) || amount < 0)
+    return res.status(400).json({ error: 'amount must be a non-negative integer' });
+
+  if (action === 'add') {
+    await db().request()
+      .input('usernum', sql.Int, usernum)
+      .input('amount',  sql.Int, amount)
+      .query(`
+        IF EXISTS (SELECT 1 FROM [Account].dbo.cabal_pointshop_table WHERE UserNum = @usernum)
+          UPDATE [Account].dbo.cabal_pointshop_table
+          SET    Point = Point + @amount
+          WHERE  UserNum = @usernum
+        ELSE
+          INSERT INTO [Account].dbo.cabal_pointshop_table (UserNum, Point)
+          VALUES (@usernum, @amount)
+      `);
+  } else {
+    await db().request()
+      .input('usernum', sql.Int, usernum)
+      .input('amount',  sql.Int, amount)
+      .query(`
+        IF EXISTS (SELECT 1 FROM [Account].dbo.cabal_pointshop_table WHERE UserNum = @usernum)
+          UPDATE [Account].dbo.cabal_pointshop_table
+          SET    Point = @amount
+          WHERE  UserNum = @usernum
+        ELSE
+          INSERT INTO [Account].dbo.cabal_pointshop_table (UserNum, Point)
+          VALUES (@usernum, @amount)
+      `);
+  }
+
+  res.json({ success: true });
+}));
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 const PORT = config.port ?? 3000;

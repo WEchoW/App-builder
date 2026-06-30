@@ -456,11 +456,18 @@
 
         <div class="card-divider"></div>
 
-        <div style="padding: 10px 0 6px">
-          <div class="info-label" style="margin-bottom:6px">Current Balance</div>
-          <div style="display:flex;align-items:baseline;gap:8px">
-            <span id="ecoin-balance" style="font-size:32px;font-weight:700;color:var(--accent);font-family:'SF Mono','Fira Code',monospace">0</span>
-            <span style="color:var(--text-dim);font-size:13px">eCoin</span>
+        <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-box">
+            <div class="stat-value" id="ecoin-cash">0</div>
+            <div class="stat-label">Cash (Paid)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="ecoin-bonus">0</div>
+            <div class="stat-label">Cash Bonus</div>
+          </div>
+          <div class="stat-box" style="border-color:var(--accent)">
+            <div class="stat-value" id="ecoin-total" style="color:var(--accent)">0</div>
+            <div class="stat-label">Total eCash</div>
           </div>
         </div>
 
@@ -469,9 +476,12 @@
         <div class="action-row">
           <label class="action-label" for="ecoin-amount-input">Amount</label>
           <input id="ecoin-amount-input" type="number" min="0" max="99999999" value="0" class="input-inline" style="width:110px" />
-          <button id="ecoin-add-btn" class="btn btn-success btn-sm">+ Add</button>
-          <button id="ecoin-set-btn" class="btn btn-primary btn-sm">Set Balance</button>
+          <button id="ecoin-add-btn" class="btn btn-success btn-sm">+ Add Cash</button>
+          <button id="ecoin-set-btn" class="btn btn-primary btn-sm">Set Cash</button>
         </div>
+        <p class="form-note" style="margin-top:10px">
+          Modifica doar Cash (platit). CashBonus ramane neschimbat. CashTotal se recalculeaza automat.
+        </p>
 
       </div><!-- /ecoin-card -->
     </div><!-- /page-cashshop -->

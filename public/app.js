@@ -792,9 +792,17 @@ document.getElementById('ecoin-search-btn').addEventListener('click', searchEcoi
 function renderEcoinCard(acc, ecoin) {
   document.getElementById('ecoin-acc-name').textContent    = acc.ID;
   document.getElementById('ecoin-acc-usernum').textContent = `#${acc.UserNum}`;
-  document.getElementById('ecoin-balance').textContent     = (ecoin.points ?? 0).toLocaleString();
+  document.getElementById('ecoin-cash').textContent        = (ecoin.cash      ?? 0).toLocaleString();
+  document.getElementById('ecoin-bonus').textContent       = (ecoin.cashBonus ?? 0).toLocaleString();
+  document.getElementById('ecoin-total').textContent       = (ecoin.cashTotal ?? 0).toLocaleString();
   document.getElementById('ecoin-amount-input').value      = 0;
   document.getElementById('ecoin-card').classList.add('visible');
+}
+
+function refreshEcoinDisplay(ecoin) {
+  document.getElementById('ecoin-cash').textContent  = (ecoin.cash      ?? 0).toLocaleString();
+  document.getElementById('ecoin-bonus').textContent = (ecoin.cashBonus ?? 0).toLocaleString();
+  document.getElementById('ecoin-total').textContent = (ecoin.cashTotal ?? 0).toLocaleString();
 }
 
 document.getElementById('ecoin-add-btn').addEventListener('click', async () => {
@@ -808,8 +816,8 @@ document.getElementById('ecoin-add-btn').addEventListener('click', async () => {
     await api('PUT', `/accounts/${currentEcoinAcc.UserNum}/ecoin`, { action: 'add', amount });
     const ecoin = await api('GET', `/accounts/${currentEcoinAcc.UserNum}/ecoin`);
     currentEcoinAcc.ecoin = ecoin;
-    document.getElementById('ecoin-balance').textContent = (ecoin.points ?? 0).toLocaleString();
-    toast(`Added ${amount.toLocaleString()} eCoin to "${currentEcoinAcc.ID}"`);
+    refreshEcoinDisplay(ecoin);
+    toast(`Added ${amount.toLocaleString()} Cash to "${currentEcoinAcc.ID}" — Total: ${(ecoin.cashTotal ?? 0).toLocaleString()}`);
   } catch (err) { toast(err.message, 'error'); }
   finally { setLoading(btn, false); }
 });
@@ -820,8 +828,8 @@ document.getElementById('ecoin-set-btn').addEventListener('click', () => {
   if (isNaN(amount) || amount < 0) { toast('Amount must be 0 or more', 'warning'); return; }
 
   openConfirmModal(
-    'Set eCoin Balance',
-    `Set "${currentEcoinAcc.ID}"'s eCoin balance to ${amount.toLocaleString()}?`,
+    'Set Cash Balance',
+    `Set "${currentEcoinAcc.ID}"'s Cash (paid) to ${amount.toLocaleString()}? CashBonus stays unchanged.`,
     async () => {
       const btn = document.getElementById('ecoin-set-btn');
       setLoading(btn, true);
@@ -829,8 +837,8 @@ document.getElementById('ecoin-set-btn').addEventListener('click', () => {
         await api('PUT', `/accounts/${currentEcoinAcc.UserNum}/ecoin`, { action: 'set', amount });
         const ecoin = await api('GET', `/accounts/${currentEcoinAcc.UserNum}/ecoin`);
         currentEcoinAcc.ecoin = ecoin;
-        document.getElementById('ecoin-balance').textContent = (ecoin.points ?? 0).toLocaleString();
-        toast(`eCoin balance set to ${(ecoin.points ?? 0).toLocaleString()} for "${currentEcoinAcc.ID}"`);
+        refreshEcoinDisplay(ecoin);
+        toast(`Cash set to ${amount.toLocaleString()} for "${currentEcoinAcc.ID}"`);
       } catch (err) { toast(err.message, 'error'); }
       finally { setLoading(btn, false); }
     }

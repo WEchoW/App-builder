@@ -499,30 +499,33 @@ app.post('/api/accounts/:usernum/premium', wrap(async (req, res) => {
 
 /**
  * GET /api/accounts/:usernum/ecoin
- * Returns the Point (eCoin) balance from cabal_pointshop_table.
+ * Returns Cash, CashBonus and CashTotal from CabalCash.dbo.CashAccount.
  */
 app.get('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
   const usernum = parseInt(req.params.usernum, 10);
   if (isNaN(usernum)) return res.status(400).json({ error: 'Invalid usernum' });
 
-  try {
-    const result = await db().request()
-      .input('usernum', sql.Int, usernum)
-      .query(`
-        SELECT TOP 1 Point
-        FROM   [Account].dbo.cabal_pointshop_table
-        WHERE  UserNum = @usernum
-      `);
-    res.json({ points: result.recordset[0]?.Point ?? 0 });
-  } catch {
-    res.json({ points: 0 });
-  }
+  const result = await db().request()
+    .input('usernum', sql.Int, usernum)
+    .query(`
+      SELECT TOP 1 Cash, CashBonus, CashTotal
+      FROM   [CabalCash].dbo.CashAccount
+      WHERE  UserNum = @usernum
+    `);
+
+  const row = result.recordset[0];
+  res.json({
+    cash:      row?.Cash      ?? 0,
+    cashBonus: row?.CashBonus ?? 0,
+    cashTotal: row?.CashTotal ?? 0,
+  });
 }));
 
 /**
  * PUT /api/accounts/:usernum/ecoin
  * Body: { action: 'add'|'set', amount: number }
- * Upserts the Point row — creates it if the account has no existing entry.
+ * Only modifies Cash (paid). CashBonus is untouched.
+ * CashTotal is always kept in sync as Cash + CashBonus.
  */
 app.put('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
   const usernum = parseInt(req.params.usernum, 10);
@@ -541,26 +544,34 @@ app.put('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
       .input('usernum', sql.Int, usernum)
       .input('amount',  sql.Int, amount)
       .query(`
-        IF EXISTS (SELECT 1 FROM [Account].dbo.cabal_pointshop_table WHERE UserNum = @usernum)
-          UPDATE [Account].dbo.cabal_pointshop_table
-          SET    Point = Point + @amount
+        IF EXISTS (SELECT 1 FROM [CabalCash].dbo.CashAccount WHERE UserNum = @usernum)
+          UPDATE [CabalCash].dbo.CashAccount
+          SET    Cash           = Cash + @amount,
+                 CashTotal      = Cash + @amount + CashBonus,
+                 UpdateDateTime = GETDATE()
           WHERE  UserNum = @usernum
         ELSE
-          INSERT INTO [Account].dbo.cabal_pointshop_table (UserNum, Point)
-          VALUES (@usernum, @amount)
+          INSERT INTO [CabalCash].dbo.CashAccount
+            (UserNum, Cash, CashBonus, CashTotal, UpdateDateTime)
+          VALUES
+            (@usernum, @amount, 0, @amount, GETDATE())
       `);
   } else {
     await db().request()
       .input('usernum', sql.Int, usernum)
       .input('amount',  sql.Int, amount)
       .query(`
-        IF EXISTS (SELECT 1 FROM [Account].dbo.cabal_pointshop_table WHERE UserNum = @usernum)
-          UPDATE [Account].dbo.cabal_pointshop_table
-          SET    Point = @amount
+        IF EXISTS (SELECT 1 FROM [CabalCash].dbo.CashAccount WHERE UserNum = @usernum)
+          UPDATE [CabalCash].dbo.CashAccount
+          SET    Cash           = @amount,
+                 CashTotal      = @amount + CashBonus,
+                 UpdateDateTime = GETDATE()
           WHERE  UserNum = @usernum
         ELSE
-          INSERT INTO [Account].dbo.cabal_pointshop_table (UserNum, Point)
-          VALUES (@usernum, @amount)
+          INSERT INTO [CabalCash].dbo.CashAccount
+            (UserNum, Cash, CashBonus, CashTotal, UpdateDateTime)
+          VALUES
+            (@usernum, @amount, 0, @amount, GETDATE())
       `);
   }
 

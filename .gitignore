@@ -1,0 +1,7 @@
+node_modules/
+
+# Database credentials — NEVER commit this file
+config.js
+
+*.log
+.env

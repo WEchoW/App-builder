@@ -1,0 +1,20 @@
+{
+  "name": "cabal-admin-panel",
+  "version": "1.0.0",
+  "description": "Modern Cabal Online private server admin panel (Bega replacement)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mssql": "^10.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

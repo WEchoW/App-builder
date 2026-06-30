@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cabal Admin Panel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER — fixed top bar with branding + DB status dot
+═══════════════════════════════════════════════════════════ -->
+<header>
+  <div class="header-brand">
+    <span class="header-logo">⚔️</span>
+    <div>
+      <h1>Cabal Admin Panel</h1>
+      <span class="header-sub">Private Server Management</span>
+    </div>
+  </div>
+
+  <div class="db-status">
+    <div id="status-dot" class="status-dot connecting"></div>
+    <span id="status-text">Connecting…</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP SHELL — sidebar + main content
+═══════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── Sidebar ── -->
+  <aside>
+    <div class="nav-section">Management</div>
+
+    <div class="nav-item active" data-page="accounts">
+      <span class="nav-icon">👤</span>
+      <span>Accounts</span>
+    </div>
+
+    <div class="nav-item disabled" data-page="characters">
+      <span class="nav-icon">⚔️</span>
+      <span>Characters</span>
+      <span class="nav-badge">Soon</span>
+    </div>
+
+    <div class="nav-section" style="margin-top:10px">Economy</div>
+
+    <div class="nav-item disabled" data-page="items">
+      <span class="nav-icon">🎒</span>
+      <span>Items</span>
+      <span class="nav-badge">Soon</span>
+    </div>
+
+    <div class="nav-item disabled" data-page="premium">
+      <span class="nav-icon">💎</span>
+      <span>Premium</span>
+      <span class="nav-badge">Soon</span>
+    </div>
+
+    <div class="nav-item disabled" data-page="cashshop">
+      <span class="nav-icon">🛒</span>
+      <span>Cash Shop</span>
+      <span class="nav-badge">Soon</span>
+    </div>
+  </aside>
+
+  <!-- ── Main content ── -->
+  <main>
+
+    <!-- ════════════════════════════════════════════════
+         ACCOUNTS PAGE
+    ════════════════════════════════════════════════ -->
+    <div id="page-accounts" class="page active">
+      <div class="page-title">Accounts</div>
+      <div class="page-subtitle">Search, edit, and manage player accounts in Account.dbo.cabal_auth_table</div>
+
+      <!-- Search card -->
+      <div class="card">
+        <div class="card-title">🔍 Search Account</div>
+        <div class="search-row">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Enter login ID…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="search-btn" class="btn btn-primary">Search</button>
+        </div>
+      </div>
+
+      <!-- Account result card — hidden until a search succeeds -->
+      <div id="account-card" class="card account-card">
+
+        <!-- Online warning — shown only when Login = 1 -->
+        <div id="online-warning" class="warning-banner hidden">
+          <span class="warning-icon">⚠️</span>
+          <span>
+            This account is currently <strong>online</strong>.
+            Database changes take effect immediately but the player may
+            not be disconnected until they relog or the game server ticks.
+            Use <em>Force Logout</em> to clear the session flag.
+          </span>
+        </div>
+
+        <!-- Account header: avatar + name + quick badges -->
+        <div class="account-header">
+          <div class="account-avatar">👤</div>
+          <div class="account-title-block">
+            <div id="acc-name" class="account-name">—</div>
+            <div class="account-meta">
+              <span id="acc-usernum">—</span>
+              <span class="meta-sep">·</span>
+              <span id="acc-username-label" style="color:var(--text-dim)">—</span>
+            </div>
+          </div>
+          <div class="account-badges">
+            <span id="acc-status"></span>
+            <span id="acc-ban-badge"></span>
+          </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <!-- Info grid: 2-column layout -->
+        <div class="account-grid">
+          <div class="info-row">
+            <span class="info-label">Auth Level</span>
+            <span id="acc-authtype" class="info-value">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last IP</span>
+            <span id="acc-lastip" class="info-value mono">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span id="acc-email" class="info-value">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Created</span>
+            <span id="acc-created" class="info-value mono">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Login Count</span>
+            <span id="acc-logins" class="info-value mono">—</span>
+          </div>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <!-- Actions row -->
+        <div class="action-row">
+          <!-- Set GM level -->
+          <label class="action-label" for="gm-level-input">Auth Level</label>
+          <input
+            id="gm-level-input"
+            type="number"
+            min="0" max="100"
+            value="0"
+            class="input-inline"
+          />
+          <button id="set-gm-btn" class="btn btn-primary btn-sm">Apply</button>
+
+          <div class="action-divider"></div>
+
+          <button id="force-logout-btn" class="btn btn-secondary btn-sm">Force Logout</button>
+          <button id="ban-btn" class="btn btn-danger btn-sm" data-action="ban">Ban Account</button>
+        </div>
+
+      </div><!-- /account-card -->
+
+      <!-- Create account card -->
+      <div class="card">
+        <div class="card-title">➕ Create Account</div>
+        <form id="create-account-form" autocomplete="off">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-id">Login ID</label>
+              <input id="new-id" type="text" placeholder="4–20 characters" maxlength="20" required />
+            </div>
+            <div class="form-group">
+              <label for="new-password">Password</label>
+              <input id="new-password" type="password" placeholder="Password" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-password-confirm">Confirm Password</label>
+              <input id="new-password-confirm" type="password" placeholder="Repeat password" required />
+            </div>
+            <div class="form-group form-group-btn">
+              <button id="create-btn" type="submit" class="btn btn-primary" style="width:100%">
+                Create Account
+              </button>
+            </div>
+          </div>
+          <p class="form-note">
+            Uses <code>cabal_tool_registerAccount</code> SP if available, otherwise falls back to direct INSERT.
+          </p>
+        </form>
+      </div>
+
+    </div><!-- /page-accounts -->
+
+    <!-- ════════════════════════════════════════════════
+         PLACEHOLDER PAGES (coming soon)
+    ════════════════════════════════════════════════ -->
+    <div id="page-characters" class="page">
+      <div class="coming-soon">
+        <div class="coming-icon">⚔️</div>
+        <h2>Characters</h2>
+        <p>Browse, edit, and warp characters — coming in a future version.</p>
+      </div>
+    </div>
+
+    <div id="page-items" class="page">
+      <div class="coming-soon">
+        <div class="coming-icon">🎒</div>
+        <h2>Items</h2>
+        <p>Give, remove, and inspect items — coming in a future version.</p>
+      </div>
+    </div>
+
+    <div id="page-premium" class="page">
+      <div class="coming-soon">
+        <div class="coming-icon">💎</div>
+        <h2>Premium</h2>
+        <p>Manage premium time and benefits — coming in a future version.</p>
+      </div>
+    </div>
+
+    <div id="page-cashshop" class="page">
+      <div class="coming-soon">
+        <div class="coming-icon">🛒</div>
+        <h2>Cash Shop</h2>
+        <p>Edit cash shop inventory and pricing — coming in a future version.</p>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /app -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════════════ -->
+
+<!-- Generic confirm (used for online-account warnings, etc.) -->
+<div id="confirm-modal" class="modal-overlay">
+  <div class="modal">
+    <div id="confirm-title" class="modal-title">Confirm</div>
+    <div id="confirm-body" class="modal-body">Are you sure?</div>
+    <div class="modal-actions">
+      <button id="confirm-cancel-btn" class="btn btn-secondary">Cancel</button>
+      <button id="confirm-ok-btn" class="btn btn-primary">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ban details modal -->
+<div id="ban-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">🔒 Ban Account</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="ban-reason-input">Reason</label>
+        <input id="ban-reason-input" type="text" placeholder="Banned by admin" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label for="ban-date-input">Ban until <span class="text-dim">(leave empty = permanent)</span></label>
+        <input id="ban-date-input" type="date" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="ban-cancel-btn" class="btn btn-secondary">Cancel</button>
+      <button id="ban-confirm-btn" class="btn btn-danger">Ban Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications container (bottom-right) -->
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -297,8 +297,7 @@ app.get('/api/characters/search', wrap(async (req, res) => {
       SELECT TOP 1
         CharacterIdx, AccountID, Name, Class, Level, Exp,
         Alz, MapIndex, MapX, MapY, SlotIndex,
-        StillOnline, CreateTime, LastConnectTime, DeleteState,
-        HonorPoint
+        StillOnline, CreateTime, LastConnectTime, DeleteState
       FROM   [Server01].dbo.cabal_character_table
       WHERE  Name = @name AND DeleteState = 0
     `);

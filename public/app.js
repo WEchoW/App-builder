@@ -489,7 +489,6 @@ function renderCharCard(char) {
   document.getElementById('char-alz').textContent        = fmtNum(char.Alz);
   document.getElementById('char-map').textContent        =
     `${mapLabel(char.MapIndex)} (${char.MapX ?? '?'}, ${char.MapY ?? '?'})`;
-  document.getElementById('char-honor').textContent      = fmtNum(char.HonorPoint);
   document.getElementById('char-last-login').textContent = fmtDate(char.LastConnectTime);
 
   document.getElementById('char-level-input').value = char.Level ?? 1;

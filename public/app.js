@@ -29,6 +29,10 @@ async function api(method, path, body = null) {
   const res  = await fetch('/api' + path, opts);
   const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
 
+  if (res.status === 401) {
+    showLoginOverlay();
+    throw new Error('Session expired — please log in again');
+  }
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
 }
@@ -91,6 +95,67 @@ function authLabel(level) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// AUTH — LOGIN / LOGOUT
+// ═══════════════════════════════════════════════════════════════
+
+function showLoginOverlay() {
+  document.getElementById('login-overlay').classList.remove('hidden');
+}
+function hideLoginOverlay() {
+  document.getElementById('login-overlay').classList.add('hidden');
+}
+
+async function checkAuth() {
+  try {
+    const { authenticated, username } = await fetch('/api/auth/me').then(r => r.json());
+    if (authenticated) {
+      hideLoginOverlay();
+      document.getElementById('header-username').textContent = username;
+    } else {
+      showLoginOverlay();
+    }
+  } catch {
+    showLoginOverlay();
+  }
+}
+
+checkAuth();
+
+document.getElementById('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.classList.add('hidden');
+  setLoading(btn, true);
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+
+    hideLoginOverlay();
+    document.getElementById('header-username').textContent = data.username;
+    document.getElementById('login-password').value = '';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    setLoading(btn, false);
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  window.location.reload();
+});
+
+// ═══════════════════════════════════════════════════════════════
 // DB STATUS POLLING
 // ═══════════════════════════════════════════════════════════════
 const $dot  = document.getElementById('status-dot');
@@ -129,6 +194,8 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item => {
     const pageId = `page-${item.dataset.page}`;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId)?.classList.add('active');
+
+    if (item.dataset.page === 'dbconfig') loadDbConfig();
   });
 });
 
@@ -842,4 +909,48 @@ document.getElementById('ecoin-set-btn').addEventListener('click', () => {
       finally { setLoading(btn, false); }
     }
   );
+});
+
+// ═══════════════════════════════════════════════════════════════
+// DB CONNECTION PAGE
+// ═══════════════════════════════════════════════════════════════
+
+async function loadDbConfig() {
+  try {
+    const cfg = await api('GET', '/db/config');
+    document.getElementById('db-server').value        = cfg.server ?? '';
+    document.getElementById('db-port').value          = cfg.port   ?? 1433;
+    document.getElementById('db-user').value          = cfg.user   ?? '';
+    document.getElementById('db-password').value      = '';
+    document.getElementById('db-trust-cert').checked  = cfg.options?.trustServerCertificate !== false;
+    document.getElementById('db-encrypt').checked     = !!cfg.options?.encrypt;
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+document.getElementById('db-save-btn').addEventListener('click', async () => {
+  const server   = document.getElementById('db-server').value.trim();
+  const port     = document.getElementById('db-port').value;
+  const user     = document.getElementById('db-user').value.trim();
+  const password = document.getElementById('db-password').value;
+  const trustServerCertificate = document.getElementById('db-trust-cert').checked;
+  const encrypt  = document.getElementById('db-encrypt').checked;
+
+  if (!server || !user || !password) {
+    toast('Server, username and password are required', 'warning'); return;
+  }
+
+  const btn = document.getElementById('db-save-btn');
+  setLoading(btn, true);
+  try {
+    const result = await api('POST', '/db/config', { server, port, user, password, trustServerCertificate, encrypt });
+    document.getElementById('db-password').value = '';
+    toast(`Saved — DB state: ${result.state}`);
+    pollStatus();
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
 });

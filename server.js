@@ -12,11 +12,33 @@
 const express = require('express');
 const sql     = require('mssql');
 const path    = require('path');
+const fs      = require('fs');
+const session = require('express-session');
 const config  = require('./config');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: config.sessionSecret || 'cabal-admin-panel-change-this-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 8 * 60 * 60 * 1000 }, // 8 hours
+}));
+
+// Load db.json if it exists — overrides config.js MSSQL settings
+const DB_CONFIG_FILE = path.join(__dirname, 'db.json');
+(function loadDbOverride() {
+  try {
+    if (fs.existsSync(DB_CONFIG_FILE)) {
+      const ov = JSON.parse(fs.readFileSync(DB_CONFIG_FILE, 'utf8'));
+      config.mssql = { ...config.mssql, ...ov };
+      console.log('[Config] DB overrides loaded from db.json');
+    }
+  } catch (e) {
+    console.warn('[Config] Could not load db.json:', e.message);
+  }
+})();
 
 // ── Database pool ─────────────────────────────────────────────────────────────
 
@@ -66,7 +88,14 @@ const wrap = fn => (req, res, next) =>
     res.status(status).json({ error: err.message });
   });
 
-// ── Routes: System ────────────────────────────────────────────────────────────
+// ── Auth guard ────────────────────────────────────────────────────────────────
+
+function requireAuth(req, res, next) {
+  if (req.session?.authenticated) return next();
+  res.status(401).json({ error: 'Not authenticated' });
+}
+
+// ── Routes: System (public) ───────────────────────────────────────────────────
 
 /**
  * GET /api/status
@@ -81,6 +110,35 @@ app.get('/api/status', wrap(async (req, res) => {
     res.json({ state: 'error' });
   }
 }));
+
+// ── Routes: Auth (public) ─────────────────────────────────────────────────────
+
+app.get('/api/auth/me', (req, res) => {
+  res.json({
+    authenticated: !!req.session?.authenticated,
+    username:      req.session?.username ?? null,
+  });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!config.admin?.username || !config.admin?.password)
+    return res.status(500).json({ error: 'Admin credentials not set in config.js' });
+  if (username === config.admin.username && password === config.admin.password) {
+    req.session.authenticated = true;
+    req.session.username      = username;
+    return res.json({ success: true, username });
+  }
+  res.status(401).json({ error: 'Invalid username or password' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => {});
+  res.json({ success: true });
+});
+
+// ── All routes below this line require a valid session ────────────────────────
+app.use('/api', requireAuth);
 
 // ── Routes: Accounts ──────────────────────────────────────────────────────────
 
@@ -575,6 +633,45 @@ app.put('/api/accounts/:usernum/ecoin', wrap(async (req, res) => {
   }
 
   res.json({ success: true });
+}));
+
+// ── Routes: DB Configuration ──────────────────────────────────────────────────
+
+/**
+ * GET /api/db/config
+ * Returns current connection settings — password is never returned.
+ */
+app.get('/api/db/config', (req, res) => {
+  const { server, port, user, options } = config.mssql;
+  res.json({ server, port, user, options, state: dbState });
+});
+
+/**
+ * POST /api/db/config
+ * Body: { server, port, user, password, trustServerCertificate, encrypt }
+ * Writes to db.json then reconnects immediately.
+ */
+app.post('/api/db/config', wrap(async (req, res) => {
+  const { server, port, user, password, trustServerCertificate, encrypt } = req.body;
+  if (!server || !user || !password)
+    return res.status(400).json({ error: 'server, user and password are required' });
+
+  const newMssql = {
+    server,
+    port:     parseInt(port, 10) || 1433,
+    user,
+    password,
+    options: {
+      trustServerCertificate: trustServerCertificate !== false,
+      encrypt:                !!encrypt,
+    },
+  };
+
+  fs.writeFileSync(DB_CONFIG_FILE, JSON.stringify(newMssql, null, 2));
+  config.mssql = newMssql;
+
+  await connectDB();
+  res.json({ success: true, state: dbState });
 }));
 
 // ── Start ─────────────────────────────────────────────────────────────────────

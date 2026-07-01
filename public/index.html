@@ -9,6 +9,31 @@
 <body>
 
 <!-- ═══════════════════════════════════════════════════════════
+     LOGIN OVERLAY — shown until session is confirmed
+═══════════════════════════════════════════════════════════ -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">⚔️</div>
+    <h1 class="login-title">Cabal Admin Panel</h1>
+    <p class="login-sub">Private Server Management</p>
+    <form id="login-form" autocomplete="off">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input id="login-username" type="text" placeholder="Username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
+      </div>
+      <div id="login-error" class="login-error hidden">Invalid credentials</div>
+      <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%;margin-top:4px">
+        Sign In
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      HEADER — fixed top bar with branding + DB status dot
 ═══════════════════════════════════════════════════════════ -->
 <header>
@@ -23,6 +48,11 @@
   <div class="db-status">
     <div id="status-dot" class="status-dot connecting"></div>
     <span id="status-text">Connecting…</span>
+  </div>
+
+  <div class="header-user">
+    <span id="header-username" class="header-username"></span>
+    <button id="logout-btn" class="btn btn-secondary btn-sm">Logout</button>
   </div>
 </header>
 
@@ -60,6 +90,13 @@
     <div class="nav-item" data-page="cashshop">
       <span class="nav-icon">🛒</span>
       <span>Cash Shop</span>
+    </div>
+
+    <div class="nav-section" style="margin-top:10px">Settings</div>
+
+    <div class="nav-item" data-page="dbconfig">
+      <span class="nav-icon">🔌</span>
+      <span>DB Connection</span>
     </div>
   </aside>
 
@@ -481,6 +518,52 @@
 
       </div><!-- /ecoin-card -->
     </div><!-- /page-cashshop -->
+
+    <!-- ════════════════════════════════════════════════
+         DB CONNECTION PAGE
+    ════════════════════════════════════════════════ -->
+    <div id="page-dbconfig" class="page">
+      <div class="page-title">DB Connection</div>
+      <div class="page-subtitle">Configure and test the MSSQL connection — saved to db.json (gitignored)</div>
+
+      <div class="card">
+        <div class="card-title">🔌 Connection Settings</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="db-server">Server / IP</label>
+            <input id="db-server" type="text" placeholder="192.168.1.1" />
+          </div>
+          <div class="form-group">
+            <label for="db-port">Port</label>
+            <input id="db-port" type="number" placeholder="1433" value="1433" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="db-user">Username</label>
+            <input id="db-user" type="text" placeholder="sa" />
+          </div>
+          <div class="form-group">
+            <label for="db-password">Password <span class="text-dim">(required to save)</span></label>
+            <input id="db-password" type="password" placeholder="Enter password to apply changes" />
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-bottom:16px">
+          <label class="checkbox-label">
+            <input id="db-trust-cert" type="checkbox" class="checkbox-input" checked />
+            <span>Trust Server Certificate</span>
+          </label>
+          <label class="checkbox-label">
+            <input id="db-encrypt" type="checkbox" class="checkbox-input" />
+            <span>Encrypt Connection</span>
+          </label>
+        </div>
+        <button id="db-save-btn" class="btn btn-primary">Save &amp; Reconnect</button>
+        <p class="form-note" style="margin-top:10px">
+          Current password is not shown for security. Enter the password only when you want to change connection settings.
+        </p>
+      </div>
+    </div><!-- /page-dbconfig -->
 
   </main>
 </div><!-- /app -->

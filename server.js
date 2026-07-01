@@ -14,18 +14,24 @@ const sql     = require('mssql');
 const path    = require('path');
 const fs      = require('fs');
 const session = require('express-session');
-const config  = require('./config');
+// config.js is optional — on cloud deployments (Railway etc.) it won't exist.
+// All values can be supplied via environment variables instead.
+let config;
+try {
+  config = require('./config');
+} catch {
+  config = { port: 3000, admin: {}, mssql: { options: { trustServerCertificate: true, encrypt: false } } };
+}
 
-// Environment variables override config.js — used for cloud deployments (Railway, Render etc.)
-// On local machine, config.js values are used as-is.
-if (process.env.PORT)             config.port                          = parseInt(process.env.PORT);
-if (process.env.SESSION_SECRET)   config.sessionSecret                 = process.env.SESSION_SECRET;
-if (process.env.ADMIN_USERNAME) { config.admin = config.admin || {};   config.admin.username = process.env.ADMIN_USERNAME; }
-if (process.env.ADMIN_PASSWORD) { config.admin = config.admin || {};   config.admin.password = process.env.ADMIN_PASSWORD; }
-if (process.env.DB_SERVER)        config.mssql.server                  = process.env.DB_SERVER;
-if (process.env.DB_PORT)          config.mssql.port                    = parseInt(process.env.DB_PORT);
-if (process.env.DB_USER)          config.mssql.user                    = process.env.DB_USER;
-if (process.env.DB_PASSWORD)      config.mssql.password                = process.env.DB_PASSWORD;
+// Environment variables override config.js values.
+if (process.env.PORT)             config.port                = parseInt(process.env.PORT);
+if (process.env.SESSION_SECRET)   config.sessionSecret       = process.env.SESSION_SECRET;
+if (process.env.ADMIN_USERNAME) { config.admin ??= {};       config.admin.username = process.env.ADMIN_USERNAME; }
+if (process.env.ADMIN_PASSWORD) { config.admin ??= {};       config.admin.password = process.env.ADMIN_PASSWORD; }
+if (process.env.DB_SERVER)        config.mssql.server        = process.env.DB_SERVER;
+if (process.env.DB_PORT)          config.mssql.port          = parseInt(process.env.DB_PORT);
+if (process.env.DB_USER)          config.mssql.user          = process.env.DB_USER;
+if (process.env.DB_PASSWORD)      config.mssql.password      = process.env.DB_PASSWORD;
 
 const app = express();
 app.use(express.json());
